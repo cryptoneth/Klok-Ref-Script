@@ -46,7 +46,7 @@ USER_AGENTS = [
 ]
 
 def print_banner():
-    """Display script banner."""
+    """Display the script banner."""
     print(rf"""
 {Fore.CYAN}
 Kelliark | Klok.ai Auto Referral and Chat Bot{Style.RESET_ALL}
@@ -332,7 +332,7 @@ def perform_chats(session, headers):
                 print(f"{Fore.YELLOW}Chat sequence failed at {successful_chats}/{num_chats}, retrying...{Style.RESET_ALL}")
                 time.sleep(2)
             else:
-                print(f"{Fore.RED}Failed to complete chat sequence after {max_retries} attempts. Got {successful_chats}/{num_chats} chats.{Style.RESET_ALL}")
+                print(f"{Fore.RED}Failed to complete chat sequence after {max_retries} attempts. Completed {successful_chats}/{num_chats} chats.{Style.RESET_ALL}")
                 return False
 
     return False
@@ -399,118 +399,8 @@ def get_nonce(address):
         print(f"{Fore.GREEN}Generated nonce: {nonce}{Style.RESET_ALL}")
         return nonce
     except Exception as e:
-        print(f"{Fore.RED}Error getting nonce: {str(e)}{Style.RESET_ALL}")
+        print(f"{Fore.RED}Error generating nonce: {str(e)}{Style.RESET_ALL}")
         return None
 
 def login(address, signature, message, ref_code):
-    """Log in to Klokapp.ai with signed message and reCAPTCHA token."""
-    try:
-        session = requests.Session()
-        print(f"{Fore.YELLOW}Generating reCAPTCHA token...{Style.RESET_ALL}")
-        recaptcha_token = get_recaptcha_token()
-        if not recaptcha_token:
-            raise Exception("Failed to generate reCAPTCHA token")
-
-        # Optional: Verify reCAPTCHA token (uncomment if needed)
-        # if not verify_recaptcha_token(recaptcha_token):
-        #     raise Exception("reCAPTCHA token verification failed")
-
-        response = session.post(
-            'https://api1-pp.klokapp.ai/v1/verify',
-            headers=get_headers(),
-            json={
-                'signedMessage': signature,
-                'message': message,
-                'referral_code': ref_code,
-                'recaptcha_token': recaptcha_token
-            }
-        )
-        if response.status_code == 200:
-            data = response.json()
-            session_token = data.get('session_token', '')
-            if not session_token:
-                raise Exception("No session_token in verify response")
-            session.headers.update(get_chat_headers(session_token))
-            print(f"{Fore.GREEN}✅ Wallet connected successfully!{Style.RESET_ALL}")
-            return session
-        print(f"{Fore.RED}Failed to login: {response.status_code} - {response.text}{Style.RESET_ALL}")
-        return None
-    except Exception as e:
-        print(f"{Fore.RED}Error during login: {str(e)}{Style.RESET_ALL}")
-        return None
-
-def get_user_input():
-    """Get number of accounts to generate from user."""
-    while True:
-        try:
-            num_accounts = int(input(f"\n{Fore.YELLOW}Enter number of accounts to generate: {Style.RESET_ALL}"))
-            if num_accounts > 0:
-                return num_accounts
-            print(f"{Fore.RED}Please enter a positive number{Style.RESET_ALL}")
-        except ValueError:
-            print(f"{Fore.RED}Please enter a valid number{Style.RESET_ALL}")
-
-def create_wallet():
-    """Generate a new Ethereum wallet."""
-    priv = secrets.token_hex(32)
-    private_key = "0x" + priv
-    acct = Account.from_key(private_key)
-    return private_key, acct.address
-
-def main():
-    """Main script logic."""
-    print_banner()
-
-    refs = load_list('refs.txt')
-    if not refs:
-        print(f"{Fore.RED}Error: No referral codes found in refs.txt{Style.RESET_ALL}")
-        return
-
-    successful_accounts = 0
-    num_accounts = get_user_input()
-
-    for i in range(num_accounts):
-        wallet_count = i + 1
-        ref_code = random.choice(refs)
-        ip = "Direct Connection"
-        log_message(wallet_count, "", ip, ref_code, "process")
-
-        try:
-            private_key, address = create_wallet()
-            log_message(wallet_count, address, ip, ref_code, "info", "Wallet created, getting nonce...")
-
-            nonce = get_nonce(address)
-            if not nonce:
-                log_message(wallet_count, address, ip, ref_code, "error", "Failed to get nonce")
-                continue
-
-            signature, message = sign_message(private_key, address, nonce)
-            if not signature:
-                log_message(wallet_count, address, ip, ref_code, "error", "Failed to sign message")
-                continue
-
-            session = login(address, signature, message, ref_code)
-            if not session:
-                log_message(wallet_count, address, ip, ref_code, "error", "Failed to login")
-                continue
-
-            log_message(wallet_count, address, ip, ref_code, "success", "Login successful, starting chat sequence...")
-
-            if perform_chats(session, session.headers):
-                save_wallet(ref_code, private_key, address)
-                log_message(wallet_count, address, ip, ref_code, "success", "All chats completed successfully!")
-                successful_accounts += 1
-            else:
-                log_message(wallet_count, address, ip, ref_code, "error", "Failed during chat sequence")
-
-        except Exception as e:
-            log_message(wallet_count, address, ip, ref_code, "error", f"Error: {str(e)}")
-            continue
-
-        time.sleep(random.uniform(1, 2))
-
-    print(f"\n{Fore.CYAN}Summary:{Style.RESET_ALL}")
-    print(f"Accounts created: {successful_accounts}")
-
-if __name__ == "__main__":
-    main()
+    """Log in to Kl...
